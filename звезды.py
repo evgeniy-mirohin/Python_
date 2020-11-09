@@ -10,3 +10,4 @@ def star(n):
         turtle.forward(a)
     time.sleep(20)
 star(l)
+
