@@ -9,6 +9,20 @@ ad_name='OU=Users,OU=spb,OU=KATREN,DC=katren,DC=net'
 server_win_uri = 'katren.net'
 search_filter = "(&(objectClass=person)(sAMAccountName=*)(sn=*))"
 win_bind_name = 'katren\mirohinev'
+
+
+root = Tk()
+w = root.winfo_screenwidth() # ширина экрана
+h = root.winfo_screenheight() # высота экрана
+root.title("Калькулятор")
+root.geometry("400x600")
+root.resizable(False, False) # запрещаем изменять размер окна
+
+######## Элементы формы #########
+L1 = Entry(justify=RIGHT)
+L1.place(relx=.5, rely=.1, anchor="c")
+
+root.mainloop()
 #print ("Введите пароль: ")
 win_bind_passwd = getpass.getpass("Введите пароль(ввод не отображается): ")
 #attrs = ['*']
