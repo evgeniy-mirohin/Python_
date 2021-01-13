@@ -1,11 +1,15 @@
 import getpass
 import ldap3
+import os
 #from pprint import pprint
 from tkinter import *
 import sys
 #from tkinter import messagebox
 from threading import Thread
+import threading
 import csv
+import json
+import time
     #############Переменные##
 ad_name='OU=Users,OU=spb,OU=KATREN,DC=katren,DC=net'
 server_win_uri = 'katren.net'
@@ -19,9 +23,9 @@ win_bind_passwd =""
 
 
 root = Tk()
-w = root.winfo_screenwidth() # получаем ширину экрана
-h = root.winfo_screenheight() # получаем высоту экрана
-root.title("Запросы из AD")
+#w = root.winfo_screenwidth() # получаем ширину экрана
+#h = root.winfo_screenheight() # получаем высоту экрана
+root.title("Запросы из AD v0.10")
 root.geometry("400x600")        # задаем размеры окна
 root.resizable(False, False) # запрещаем изменять размер окна
 
@@ -53,6 +57,29 @@ class windows:
     #top.destroy() 
        # print (message.get())
 
+class Decorate:
+    def __init__(self):
+        self.but = Button(root)
+        self.but["text"] = "Class_to count"
+        self.but.bind("<Button-1>", self.printer)
+        self.but.pack()
+    def thread(func):
+        '''
+        Это простейший декоратор. В него мы будем заворачивать 
+        функции. Любая функция, завернутая этим декоратором, 
+        будет выполнена в отдельном потоке.
+        '''
+        def wrapper(*args, **kwargs):
+            current_thread = threading.Thread(
+                target=func, args=args, kwargs=kwargs)
+            current_thread.start()
+        return wrapper
+    @thread  # собственно, применяем декоратор
+    def printer(self, event):
+        for i in range(10):
+            print(10 - i - 1, "second")
+            time.sleep(1)
+
 # # # # # # # # # #  # # # #  # # 
 
 
@@ -74,6 +101,19 @@ def Usercheck():
     elif ismarried==1:
         EnUser.configure(state="readonly")
 
+
+def thread(func):
+    '''
+    Это простейший декоратор. В него мы будем заворачивать 
+    функции. Любая функция, завернутая этим декоратором, 
+    будет выполнена в отдельном потоке.
+    '''
+    def wrapper():
+        current_thread = threading.Thread(
+            target=func)
+        current_thread.start()
+    return wrapper
+@thread  # собственно, применяем декоратор
 def Consolidate():
     attrs = GetAtrtr.get().split(',')
     if attrs[0] == "":
@@ -201,9 +241,9 @@ def WriteCSV1():
         file_writer.writeheader()
         file_writer.writerows(UserFull)     
 
-def WriteXML():
-    for i in range(len1):
-        str(result[i])      
+#def WriteXML():
+ #   for i in range(len1):
+#        str(result[i])      
 
 def WriteTXT1():
     print("def WriteTXT() \t запущена")
@@ -221,6 +261,25 @@ def WriteTXT():
         file_writer = csv.DictWriter(csv_file, delimiter = "\t", lineterminator="\r", fieldnames=letter2)
         file_writer.writeheader()
         file_writer.writerows(UserFull)  
+
+
+
+def SettingRead():
+    if os.path.exists("setting1.json"):
+        with open("setting1.json") as file1: 
+            data = file1.read()
+            global dictData
+            dictData = json.loads(data) 
+            #dictData["ad_name"] ="te99s090t146"
+            print(dictData)
+            temp1 = dictData["attrs"]
+            temp2 = temp1.split(",")
+            print(temp2[1])
+            Attrs.insert(0,dictData["attrs"])
+
+def SettingWrite():
+    with open("setting2.json", "w") as file2:
+        json.dump(dictData, file2,indent=0)
 
 # # # # # # # # # #
 thread1 = Thread(target = Consolidate)
@@ -248,15 +307,15 @@ EnUser.insert(0,getpass.getuser())
 EnUser.configure(state="normal")
 EnPaswd = Entry(justify=RIGHT,show='*',textvariable=GetPasswd)
 EnPaswd.place(relx=.5, rely=.3, anchor="c")
-EnOtdel = Entry(justify=RIGHT,textvariable=GetAtrtr)
-EnOtdel.place(relx=.5, rely=.15, anchor="c")
+Attrs = Entry(justify=RIGHT,textvariable=GetAtrtr)
+Attrs.place(relx=.5, rely=.15, anchor="c")
 EnSearch = Entry(justify=RIGHT,textvariable=GetSearch)
 EnSearch.place(relx=.5, rely=.05, anchor="c")
 
-btnGO = Button(text="GO",  command=lambda: WriteTXT())
+btnGO = Button(text="GO",  command=lambda: Decorate.printer)
 btnGO.place(relx=.6, rely=.4)
 #btnPrint = Button(text="Print",  command = lambda:print(get_users_win_data(server_win_uri,ad_name,search_filter,attrs,win_bind_name,message.get())))
-btnPrint = Button(text="Запрос",  command = lambda:thread1.start())
+btnPrint = Button(text="Запрос",  command = Consolidate)
 btnPrint.place(relx=.45, rely=.4)
 
 Usercheckbutton = Checkbutton(text="запрос от текущего пользователя Windows", variable=ismarried,onvalue=0, offvalue=1,commmand=Usercheck())
@@ -274,8 +333,8 @@ filemenu.add_command(label="Выход")
 
 
 filemenu2.add_command(label=".CSV", command=WriteCSV1)
-filemenu2.add_command(label=".txt")
-filemenu2.add_command(label=".xml")
+filemenu2.add_command(label=".txt", command=WriteTXT)
+filemenu2.add_command(label=".json")
 filemenu2.add_command(label=".html")
 filemenu2.add_command(label=".xls")
 filemenu2.add_command(label="на дисплей")
@@ -287,6 +346,8 @@ helpmenu.add_command(label="О программе")
 mainmenu.add_cascade(label="Файл",menu=filemenu)
 mainmenu.add_cascade(label="Справка",menu=helpmenu)
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+SettingRead()
+obj = Decorate()
 root.mainloop()
 
 
